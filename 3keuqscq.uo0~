@@ -1,0 +1,157 @@
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using OpenQA.Selenium.Remote;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
+using System.Web;
+using OpenQA.Selenium.Support.UI;
+using System.Threading;
+using OpenQA.Selenium.Interactions;
+//using Nest;
+
+namespace Shufersal
+{
+    public class FindAllElements
+    {
+        public IReadOnlyCollection<IWebElement> ProductDatatlist = null;
+        public IReadOnlyCollection<IWebElement> AddToChartlist = null;
+        public Dictionary<string,string[]> CombinedData = new Dictionary<string, string[]>();
+        public IWebDriver driver = null;
+        public FindAllElements(IWebDriver driver)
+        {
+            if(driver != null)
+            {
+                this.driver = driver;
+            }
+        }
+
+        public Dictionary<string, string[]> FindAllProducts()
+        {
+            //By productlocator = By.XPath("//div[@class='tile row miglog-prod miglog-sellingmethod-by_unit tt-suggestion tt-selectable']");
+            //By productlocator = By.XPath("//div[@class='text']");
+            //By productlocator = By.XPath("//div[@class='left_side col-lg-11']");
+            //ProductDatatlist = this.driver.FindElements(productlocator);
+
+            //By contentlocator = By.XPath("//div[@class='textContainer col-xs-12 col-lg-5']");
+            By contentlocator = By.XPath("//div[@class='tile row miglog-prod miglog-sellingmethod-by_unit tt-suggestion tt-selectable']");
+            IReadOnlyCollection <IWebElement> content = this.driver.FindElements(contentlocator);
+
+            
+
+            By pricelocator = By.XPath("//div[@class='price col-xs-12 col-lg-3']");
+            //By pricelocator = By.XPath("//div[@class='price col-xs-12 col-lg-3']");
+            //By pricelocator = By.XPath("//div[@class='totalPrice']"); 
+            IReadOnlyCollection<IWebElement> Price = this.driver.FindElements(pricelocator);
+
+            By addtochartlocator = By.XPath("//button[@class='btn js-add-to-cart js-enable-btn miglog-btn-add']");
+            AddToChartlist = this.driver.FindElements(addtochartlocator);
+
+            //List<string> prodname = new List<string>();
+            List<string> Content = new List<string>();
+            //List<string> price = new List<string>();
+            List<string> AddToChar = new List<string>();
+
+            /**
+            foreach (IWebElement ProductDatat in ProductDatatlist)
+            {
+                string text = ProductDatat.Text;
+                if (!String.IsNullOrEmpty(text) && text.Contains("חלב"))
+                {
+                    char[] delemeter = { '\r', '\n', };
+                    string[] parceProductDatat = text.Split(delemeter);
+                    string[] arr = new[] { "price", parceProductDatat[0] };
+                    prodname.Add(parceProductDatat[0]);
+                }
+            }
+            **/
+            int icount = content.Count;
+            foreach (IWebElement Cont in content)
+            {
+                
+                string text = Cont.Text;
+                string[] selectprice = null;
+                string key = String.Empty;
+               
+               if (icount == content.Count/2)
+                {
+
+                    //By sliderlocator = By.XPath("//*[@id='mCSB_3_dragger_vertical']");
+                    By sliderlocator = By.Id("mCSB_3_scrollbar_vertical");
+                    IWebElement slider = this.driver.FindElement(sliderlocator);
+                    By outputlocator = By.XPath("//*[@id='mCSB_3_scrollbar_vertical']");
+                    //By outputlocator = By.XPath("//*[@id='mCSB_7_dragger_vertical']");
+                    IWebElement output = this.driver.FindElement(outputlocator);
+                    Actions act = new Actions(driver);
+                    act.DragAndDropToOffset(slider, 0, -310).Release().Build().Perform();
+                    //act.DragAndDrop(slider, output);
+                    slider.Click();
+                }
+               if (!String.IsNullOrEmpty(text))
+                  {
+                    char[] delemeter = { '\r', '\n', };
+                    string[] parcecontt = text.Split(delemeter);
+                    if(parcecontt.Length < 11)
+                    {
+                        selectprice = parcecontt[4].Split(' ');
+                        key = parcecontt[0].ToString();
+                    }
+                    else
+                    {
+                        selectprice = parcecontt[8].Split(' ');
+                        key = parcecontt[0].ToString() + parcecontt[4].ToString();
+                    }
+                    string[] arr = new string[] { "price:", selectprice[0].ToString() };
+                    if(!CombinedData.ContainsKey(key))
+                    {
+                        CombinedData[key] = arr;
+                    }
+                    else
+                    {
+                        key = key + 2.ToString();
+                        CombinedData[key] = arr;
+                    }
+                    
+                  }
+                icount--;
+            }
+            /**
+            foreach (IWebElement prc in Price)
+            {
+                string text = prc.Text;
+                if (!String.IsNullOrEmpty(text))
+                {
+                    char[] delemeter = { '\r', '\n', };
+                    string[] parcecontt = text.Split(delemeter);
+                    price.Add(parcecontt[0]);
+                }
+            }
+            **/
+
+            foreach (IWebElement chart in AddToChartlist)
+            {
+                System.Drawing.Point chartpoint = chart.Location;
+                char[] delemeter3 = { '{', '=', '}', ',' };
+                string strpoint = chartpoint.ToString();
+                string[] parsepoint = strpoint.Split(delemeter3);
+
+                char[] delemeter2 = { '(', '=', ')' };
+                string partsechart = chart.ToString();
+                string[] parsechart = partsechart.Split(delemeter2);
+                string id = parsechart[2];
+                string t1 = parsepoint[1].ToString() + ": " + parsepoint[2].ToString() + " " + parsepoint[3].ToString() + ": " + parsepoint[4].ToString();
+                string total = "id: " + id.ToString() + " " + t1;
+                AddToChar.Add(total);
+            }
+            /**
+            for (int i = 0; i < prodname.Count; i++)
+            {
+                string[] t1 = new string[2] { price[i], AddToChar[i] };
+                this.CombinedData[prodname[i]] = t1;
+            }
+            **/
+            return this.CombinedData;
+        }
+
+    }
+}
